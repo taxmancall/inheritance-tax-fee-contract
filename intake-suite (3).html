@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>상속 수임 통합 도구 — 견적·계약서 (내부용)</title>
+<style>
+:root{--navy:#2E7D4F;--blue:#3E9463;--bg:#f4f7f5;--card:#fff;--line:#d8e6dc;--ink:#26241f;--ink2:#5a6472;--red:#a23b2e;--green:#1e7a45;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Pretendard","Noto Sans KR",-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:14.5px;line-height:1.65;}
+.top{background:var(--navy);color:#fff;padding:14px 20px;}
+.top b{font-size:16px;}
+.top span{font-size:12px;opacity:.75;margin-left:10px;}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 60px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px;}
+.card h2{font-size:16px;color:var(--navy);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--navy);}
+.row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.row label{min-width:190px;font-weight:600;font-size:13.5px;}
+input[type=number]{width:130px;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;text-align:right;}
+input[type=number]:focus{outline:none;border-color:var(--blue);}
+select{padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13.5px;background:#fff;}
+.chk{display:flex;align-items:center;gap:8px;padding:7px 0;font-size:13.5px;cursor:pointer;}
+.chk input{width:16px;height:16px;accent-color:var(--navy);}
+.chk .sub{color:var(--ink2);font-size:12px;}
+.unit{color:var(--ink2);font-size:13px;}
+.result{background:var(--navy);color:#fff;border-radius:12px;padding:20px;margin-bottom:16px;}
+.result h2{font-size:15px;border-bottom:1px solid rgba(255,255,255,.25);padding-bottom:8px;margin-bottom:12px;}
+.rline{display:flex;justify-content:space-between;padding:4px 0;font-size:13.5px;}
+.rline.dim{opacity:.75;font-size:12.5px;}
+.rline.total{border-top:1px solid rgba(255,255,255,.3);margin-top:8px;padding-top:10px;font-size:17px;font-weight:800;}
+.rline.total .v{color:#ffd88a;}
+.note{font-size:12px;color:var(--ink2);margin-top:8px;line-height:1.7;}
+.divider{margin:14px 0;border:none;border-top:1px dashed var(--line);}
+.pill{display:inline-block;background:#eaf4ed;color:var(--navy);border-radius:12px;padding:2px 10px;font-size:11.5px;font-weight:700;margin-left:6px;}
+@media(max-width:560px){.row label{min-width:100%;}}
+.qbtn{display:block;width:100%;margin-top:12px;padding:12px;border:none;border-radius:10px;
+  background:var(--navy);color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
+.qbtn:hover{opacity:.92;}
+#quoteSheet{display:none;}
+@page{size:A4;margin:8mm 0;}
+@media print{
+  .top,.wrap{display:none !important;}
+  #quoteSheet{display:none;padding:10mm 16mm;font-size:13px;color:#26241f;}
+  body.pq #quoteSheet{display:block;}
+  #quoteSheet .qhead{display:flex;justify-content:space-between;align-items:flex-start;
+    border-bottom:2.5px solid var(--navy);padding-bottom:12px;margin-bottom:18px;}
+  #quoteSheet h1{font-size:22px;color:var(--navy);}
+  #quoteSheet .qoffice{text-align:right;font-size:11px;color:#5a6472;line-height:1.7;}
+  #quoteSheet table{width:100%;border-collapse:collapse;margin:10px 0 4px;}
+  #quoteSheet th{background:var(--navy);color:#fff;padding:8px 10px;text-align:left;font-size:12px;}
+  #quoteSheet td{padding:8px 10px;border-bottom:1px solid #d8e6dc;}
+  #quoteSheet td.r{text-align:right;}
+  #quoteSheet .qtotal td{font-size:16px;font-weight:800;color:var(--navy);border-top:2px solid var(--navy);border-bottom:none;}
+  #quoteSheet .qnote{font-size:10.5px;color:#5a6472;line-height:1.8;margin-top:14px;}
+  #quoteSheet table, #quoteSheet .qnote, #quoteSheet .qblock{page-break-inside:avoid;}
+  #quoteSheet tr{page-break-inside:avoid;}
+  #quoteSheet .qpage2{page-break-before:always;padding-top:2mm;}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+#sheet{display:none;}
+@page{size:A4;margin:12mm 0;}
+@media print{
+  #sheet{display:none;padding:2mm 17mm;font-size:11.5px;line-height:1.75;color:#222;}
+  #sheet h1{text-align:center;font-size:21px;color:var(--g);margin-bottom:2px;}
+  #sheet .csub{text-align:center;font-size:10px;color:#5a6472;margin-bottom:14px;}
+  #sheet h3{font-size:13px;color:var(--g);margin:13px 0 4px;}
+  #sheet table{width:100%;border-collapse:collapse;margin:6px 0;}
+  #sheet th{background:var(--g);color:#fff;padding:6px 8px;font-size:10.5px;text-align:center;}
+  #sheet td{border:1px solid #c9d8ce;padding:6px 8px;font-size:11px;}
+  #sheet .pt td:first-child{background:#f0f7f2;font-weight:700;width:26mm;}
+  #sheet ol{margin:2px 0 6px 22px;}
+  #sheet ol li{margin-bottom:2px;}
+  #sheet .acct{background:#eaf4ed;border-radius:5px;padding:6px 10px;font-weight:700;margin:4px 0;}
+  #sheet .pgbrk{break-before:page;page-break-before:always;}
+  #sheet .signrow{margin-top:10px;font-size:12px;}
+  table,tr{break-inside:avoid;page-break-inside:avoid;}
+  h3{break-after:avoid;page-break-after:avoid;}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+
+@media print{ body.pc #sheet{display:block;} }
+.heir-row{display:grid;grid-template-columns:1.2fr 1fr 1.1fr 1.4fr 34px;gap:6px;margin-bottom:6px;}
+.heir-row input{width:100%;font-size:13px;padding:7px 8px;}
+.heir-row button{border:none;background:#eee;border-radius:6px;cursor:pointer;color:#a23b2e;font-weight:700;}
+.addbtn{margin-top:4px;padding:7px 14px;border:1.5px dashed #2E7D4F;background:#eaf4ed;color:#2E7D4F;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;}
+.qbtn{display:block;width:100%;margin-top:14px;padding:13px;border:none;border-radius:10px;background:#2E7D4F;color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
+.hint{font-size:12px;color:var(--ink2);}
+</style>
+</head>
+<body>
+
+<div class="top"><b>상속 수임 통합 도구</b><span>견적 계산 → 견적서 PDF → 계약서 PDF · 내부용</span></div>
+
+<div class="wrap">
+
+<!-- ① 신고 보수 -->
+<div class="card">
+  <h2>① 상속세 신고 보수</h2>
+  <div class="row">
+    <label>총상속재산가액</label>
+    <input type="number" id="asset" min="0" step="0.1" placeholder="0" oninput="calc()"> <span class="unit">억원</span>
+  </div>
+  <hr class="divider">
+  <div class="row"><label>비상장주식 평가</label><input type="number" id="stock" min="0" value="0" oninput="calc()"> <span class="unit">종목 (+150만/종목)</span></div>
+  <div class="row"><label>부동산 건수</label><input type="number" id="realty" min="0" value="0" oninput="calc()"> <span class="unit">건 (5건 초과분 +20만/건)</span></div>
+  <div class="row"><label>사전증여 정리</label><input type="number" id="gift" min="0" value="0" oninput="calc()"> <span class="unit">건 (+30만/건)</span></div>
+  <label class="chk"><input type="checkbox" id="foreign" onchange="calc()"> 해외재산 · 비거주자 판정 <span class="sub">(+30~50%)</span></label>
+  <label class="chk"><input type="checkbox" id="urgent" onchange="calc()"> 신고기한 2개월 미만 착수 <span class="sub">(+30%)</span></label>
+  <label class="chk"><input type="checkbox" id="biz" onchange="calc()"> 가업·영농상속공제 적용 <span class="sub">(+300만, 요건 검토·사후관리 설계 포함)</span></label>
+</div>
+
+<!-- ② 조사 대응 -->
+<div class="card">
+  <h2>② 세무조사 대응 보수 <span class="pill">별도 계약</span></h2>
+  <div class="row">
+    <label>조사 관할</label>
+    <select id="audit" onchange="calc()">
+      <option value="none">해당 없음</option>
+      <option value="office">관할 세무서 조사 (착수 300만)</option>
+      <option value="regional">지방국세청 조사국 (착수 500만~)</option>
+    </select>
+  </div>
+  <label class="chk"><input type="checkbox" id="othersFiling" onchange="calc()"> 타 사무소 신고 건 <span class="sub">(착수보수 +30%)</span></label>
+  <div class="row"><label>예상 쟁점 감액액</label><input type="number" id="save" min="0" step="0.1" value="0" oninput="calc()"> <span class="unit">억원 (성공보수 15%<span id="regionalNote"></span>)</span></div>
+</div>
+
+<!-- 결과 -->
+<div class="result" id="result">
+  <h2>견적 결과 (VAT 별도)</h2>
+  <div id="lines"></div>
+  <p class="note" style="color:rgba(255,255,255,.7);">· 신고 보수에는 신고 후 서면 소명자료 제출 대응 2회까지 포함됩니다. 실지조사 통지 시 ②로 전환됩니다.<br>· 100억원 초과, 지방청 조사, 불복(이의신청·심판청구: 착수 300~500만 + 인용세액의 20%)은 별도 협의입니다.<br>· 성공보수 기준: 당초 고지 예상액 대비 감액분.<br>· 모든 보수는 부가세 별도 기준으로 설계되어 있으며, 고객 안내 시에는 항상 부가세 포함 청구액을 함께 말씀드립니다.</p>
+</div>
+
+<div class="card">
+  <div class="row"><label>고객명 (견적서용, 선택)</label><input type="text" id="cname" placeholder="예: 홍길동 님" style="flex:1;min-width:180px;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;"></div>
+  <button class="qbtn" onclick="printQuote()">📄 견적서 PDF 저장 (부가세 포함 기준)</button>
+  <p class="note">인쇄 대화상자에서 "PDF로 저장"을 선택하세요. 견적서에는 부가세 포함 청구액이 중심으로 표시됩니다.</p>
+</div>
+
+<div class="card">
+  <h2>계약서 정보 <span class="pill">견적 확정 후</span></h2>
+  <div class="row"><label>대표상속인 성명</label><input type="text" id="rep" placeholder="위 고객명과 동일하면 비워두세요" style="width:220px;"> <input type="text" id="repTel" placeholder="연락처" style="flex:1;min-width:150px;"></div>
+  <div class="row"><label>피상속인 성명</label><input type="text" id="dec" style="width:160px;"></div>
+  <div class="row"><label>상속개시일</label><input type="date" id="ddate"> <label style="min-width:70px;">계약일</label><input type="date" id="cdate"></div>
+  <div class="row"><label>확정 보수 (부가세 별도)</label><input type="number" id="fee" min="0" style="width:120px;text-align:right;" oninput="feeInfo()"> <span class="unit">만원</span> <button class="addbtn" style="margin-top:0;" onclick="pullFee()">← 위 견적 결과 가져오기</button></div>
+  <div class="hint" id="feeHint" style="margin-left:160px;"></div>
+  <hr class="divider">
+  <div style="font-size:13px;font-weight:700;margin-bottom:6px;">상속인 명단 (별지)</div>
+  <div class="heir-row" style="font-size:12px;font-weight:700;color:var(--ink2);"><span>성명</span><span>관계</span><span>생년월일</span><span>연락처</span><span></span></div>
+  <div id="heirs"></div>
+  <button class="addbtn" onclick="addHeir()">+ 상속인 추가</button>
+  <button class="qbtn" onclick="makeContract()">📄 계약서 PDF 저장</button>
+</div>
+
+<!-- 기본 보수표 -->
+<div class="card">
+  <h2>기본 보수표 — 전체 구간 (VAT 별도)</h2>
+  <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
+    <tr style="background:var(--navy);color:#fff;">
+      <th style="padding:9px 10px;text-align:left;">총상속재산가액</th>
+      <th style="padding:9px 10px;text-align:left;">보수 산식</th>
+      <th style="padding:9px 10px;text-align:right;">예시 (구간 상단 기준)</th>
+    </tr>
+    <tr><td style="padding:8px 10px;border-bottom:1px solid var(--line);">3억원 이하</td><td style="padding:8px 10px;border-bottom:1px solid var(--line);">정액</td><td style="padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;font-weight:700;">150만원</td></tr>
+    <tr><td style="padding:8px 10px;border-bottom:1px solid var(--line);">5억원 이하</td><td style="padding:8px 10px;border-bottom:1px solid var(--line);">정액</td><td style="padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;font-weight:700;">200만원</td></tr>
+    <tr><td style="padding:8px 10px;border-bottom:1px solid var(--line);">10억원 이하</td><td style="padding:8px 10px;border-bottom:1px solid var(--line);">정액</td><td style="padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;font-weight:700;">250만원</td></tr>
+    <tr><td style="padding:8px 10px;border-bottom:1px solid var(--line);">10억 초과 ~ 20억 미만</td><td style="padding:8px 10px;border-bottom:1px solid var(--line);">250만원 + 10억 초과분 × 0.3%</td><td style="padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;">20억 → 550만원</td></tr>
+    <tr><td style="padding:8px 10px;border-bottom:1px solid var(--line);">20억 ~ 30억 미만</td><td style="padding:8px 10px;border-bottom:1px solid var(--line);">550만원 + 20억 초과분 × 0.2%</td><td style="padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;">30억 → 750만원</td></tr>
+    <tr><td style="padding:8px 10px;border-bottom:1px solid var(--line);">30억 ~ 50억 미만</td><td style="padding:8px 10px;border-bottom:1px solid var(--line);">750만원 + 30억 초과분 × 0.15%</td><td style="padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;">50억 → 1,050만원</td></tr>
+    <tr><td style="padding:8px 10px;border-bottom:1px solid var(--line);">50억 ~ 100억 미만</td><td style="padding:8px 10px;border-bottom:1px solid var(--line);">1,050만원 + 50억 초과분 × 0.1%</td><td style="padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;">100억 → 1,550만원</td></tr>
+    <tr><td style="padding:8px 10px;">100억원 이상</td><td style="padding:8px 10px;">1,550만원 + 초과분 별도 협의</td><td style="padding:8px 10px;text-align:right;">협의</td></tr>
+  </table>
+  <p class="note">2026.9. 채택 기준표. 구간 경계에서 산식이 연속되도록 설계되어 있습니다 (10억 250 → 20억 550 → 30억 750 → 50억 1,050 → 100억 1,550). 가산 항목·조사 대응 보수는 위 계산기 참조.</p>
+</div>
+
+</div>
+
+<script>
+function baseFee(x){ // x: 억원 → 만원
+  if (x <= 0) return 0;
+  if (x <= 3) return 150;
+  if (x <= 5) return 200;
+  if (x <= 10) return 250;
+  if (x < 20) return 250 + (x - 10) * 30;
+  if (x < 30) return 550 + (x - 20) * 20;
+  if (x < 50) return 750 + (x - 30) * 15;
+  if (x < 100) return 1050 + (x - 50) * 10;
+  return null; // 협의
+}
+function won(m){ // 만원 → 표기
+  if (m >= 10000) return (m/10000).toFixed(m%10000?2:0).replace(/\.?0+$/,'') + "억 " + (m%10000 ? Math.round(m%10000).toLocaleString() + "만" : "") + "원";
+  return Math.round(m).toLocaleString() + "만원";
+}
+function calc(){
+  var a = parseFloat(document.getElementById("asset").value) || 0;
+  var lines = [];
+  var over100 = false;
+
+  // 기본보수
+  var base = baseFee(a);
+  if (base === null){ base = 1550; over100 = true;
+    lines.push(["기본보수 (100억 초과 — 협의 기준선)", won(base)+"~", won(base)+"~"]);
+  } else if (base > 0){
+    lines.push(["기본보수 (재산 " + a + "억)", won(base), won(base)]);
+  }
+
+  // 가산 (정액)
+  var add = 0;
+  var st = parseInt(document.getElementById("stock").value)||0;
+  if (st>0){ add += st*150; lines.push(["비상장주식 평가 " + st + "종목", won(st*150), won(st*150)]); }
+  var rt = parseInt(document.getElementById("realty").value)||0;
+  if (rt>5){ add += (rt-5)*20; lines.push(["부동산 " + rt + "건 (초과 " + (rt-5) + "건)", won((rt-5)*20), won((rt-5)*20)]); }
+  var gf = parseInt(document.getElementById("gift").value)||0;
+  if (gf>0){ add += gf*30; lines.push(["사전증여 정리 " + gf + "건", won(gf*30), won(gf*30)]); }
+  if (document.getElementById("biz").checked){ add += 300; lines.push(["가업·영농상속공제", won(300), won(300)]); }
+
+  // 가산 (비율) — low/high
+  var subtotal = base + add;
+  var lowPct = 0, highPct = 0;
+  if (document.getElementById("foreign").checked){ lowPct += 0.30; highPct += 0.50; }
+  if (document.getElementById("urgent").checked){ lowPct += 0.30; highPct += 0.30; }
+  var low = subtotal * (1 + lowPct);
+  var high = subtotal * (1 + highPct);
+  if (lowPct > 0){
+    lines.push(["비율 가산 (해외/긴급)", "+" + Math.round(lowPct*100) + "%", "+" + Math.round(highPct*100) + "%"]);
+  }
+
+  var html = "";
+  var sameRange = (Math.round(low) === Math.round(high)) && !over100;
+  lines.forEach(function(l){
+    html += '<div class="rline dim"><span>' + l[0] + '</span><span>' + (l[1]===l[2] ? l[1] : l[1] + " ~ " + l[2]) + '</span></div>';
+  });
+  var totalStr = over100
+    ? won(low) + "~ (협의)"
+    : (sameRange ? won(low) : won(low) + " ~ " + won(high));
+  html += '<div class="rline total"><span>① 신고 보수 (VAT 별도)</span><span class="v">' + (base>0 ? totalStr : "재산가액을 입력하세요") + '</span></div>';
+  if (base>0 && !over100){
+    var vatStr = sameRange ? won(low*1.1) : won(low*1.1) + " ~ " + won(high*1.1);
+    html += '<div class="rline" style="font-size:13px;"><span>&nbsp;&nbsp;→ 부가세 포함 청구액</span><span>' + vatStr + '</span></div>';
+  }
+
+  // ② 조사
+  var audit = document.getElementById("audit").value;
+  document.getElementById("regionalNote").textContent = (audit==="regional") ? "~20%" : "";
+  if (audit !== "none"){
+    var start = (audit==="regional") ? 500 : 300;
+    var startLabel = (audit==="regional") ? "지방국세청 착수보수" : "세무서 조사 착수보수";
+    if (document.getElementById("othersFiling").checked){ start = start*1.3; startLabel += " (타 사무소 신고 +30%)"; }
+    html += '<div class="rline dim" style="margin-top:14px;"><span>' + startLabel + '</span><span>' + won(start) + (audit==="regional"?"~":"") + '</span></div>';
+    var sv = parseFloat(document.getElementById("save").value)||0;
+    if (sv>0){
+      var sLow = sv*10000*0.15, sHigh = (audit==="regional") ? sv*10000*0.20 : sv*10000*0.15;
+      html += '<div class="rline dim"><span>성공보수 (감액 ' + sv + '억 × 15' + (audit==="regional"?"~20":"") + '%)</span><span>' + won(sLow) + (sHigh>sLow ? " ~ " + won(sHigh) : "") + '</span></div>';
+      html += '<div class="rline total"><span>② 조사 대응 보수 (VAT 별도)</span><span class="v">' + won(start+sLow) + ((audit==="regional")?" ~ " + won(start+sHigh)+"+":"") + '</span></div>';
+      html += '<div class="rline" style="font-size:13px;"><span>&nbsp;&nbsp;→ 부가세 포함 청구액</span><span>' + won((start+sLow)*1.1) + ((audit==="regional")?" ~ " + won((start+sHigh)*1.1)+"+":"") + '</span></div>';
+    } else {
+      html += '<div class="rline total"><span>② 조사 대응 보수</span><span class="v">' + won(start) + (audit==="regional"?"~":"") + ' + 성공보수</span></div>';
+    }
+  }
+
+  document.getElementById("lines").innerHTML = html;
+}
+calc();
+
+function inc(m){ return won(Math.round(m*1.1)); } // 포함가
+function printQuote(){
+  var a = parseFloat(document.getElementById("asset").value) || 0;
+  if (!a){ alert("총상속재산가액을 먼저 입력하세요."); return; }
+  var cname = (document.getElementById("cname").value || "").trim();
+  var today = new Date();
+  var dstr = today.getFullYear() + ". " + (today.getMonth()+1) + ". " + today.getDate() + ".";
+
+  // 항목 재계산 (calc와 동일 로직, 견적서용 수집)
+  var rows = [], base = baseFee(a);
+  var over100 = false;
+  if (base === null){ base = 1550; over100 = true; rows.push(["상속세 신고 기본보수 (총재산 " + a + "억원 — 100억 초과 협의 기준선)", base]); }
+  else rows.push(["상속세 신고 기본보수 (총재산 " + a + "억원)", base]);
+  var st = parseInt(document.getElementById("stock").value)||0;
+  if (st>0) rows.push(["비상장주식 평가 (" + st + "종목)", st*150]);
+  var rt = parseInt(document.getElementById("realty").value)||0;
+  if (rt>5) rows.push(["부동산 다건 가산 (" + rt + "건 중 초과 " + (rt-5) + "건)", (rt-5)*20]);
+  var gf = parseInt(document.getElementById("gift").value)||0;
+  if (gf>0) rows.push(["사전증여재산 정리 (" + gf + "건)", gf*30]);
+  if (document.getElementById("biz").checked) rows.push(["가업·영농상속공제 적용 (요건 검토·사후관리 설계 포함)", 300]);
+
+  var sum = rows.reduce(function(s,r){ return s+r[1]; }, 0);
+  var lowPct = 0, highPct = 0;
+  if (document.getElementById("foreign").checked){ lowPct += .30; highPct += .50; }
+  if (document.getElementById("urgent").checked){ lowPct += .30; highPct += .30; }
+  var low = sum*(1+lowPct), high = sum*(1+highPct);
+  var isRange = Math.round(low) !== Math.round(high);
+
+  var html = '<div class="qhead"><div><h1>상속세 신고 보수 견적서</h1>' +
+    '<div style="margin-top:6px;font-size:12px;">' + (cname ? "고객명: <b>" + cname + "</b> &nbsp;·&nbsp; " : "") + '견적일: ' + dstr + ' &nbsp;·&nbsp; 유효기간: 견적일부터 30일</div></div>' +
+    '<div class="qoffice"><b style="font-size:13px;color:#2E7D4F;">원제우세무사사무소</b><br>경기도 부천시 소향로 135, 3층<br>전화 032-321-4521 · 팩스 02-6280-4521<br>taxmancall@gmail.com · 카카오톡 taxmancall</div></div>';
+
+  html += '<table><tr><th>항목</th><th style="text-align:right;">보수 (부가세 포함)</th></tr>';
+  rows.forEach(function(r){
+    html += '<tr><td>' + r[0] + '</td><td class="r">' + inc(r[1]) + '</td></tr>';
+  });
+  if (lowPct>0){
+    html += '<tr><td>난이도 가산 (' + (document.getElementById("foreign").checked ? "해외재산·비거주자 판정 " : "") + (document.getElementById("urgent").checked ? "긴급 착수" : "") + ')</td><td class="r">+' + Math.round(lowPct*100) + (highPct>lowPct ? "~" + Math.round(highPct*100) : "") + '%</td></tr>';
+  }
+  var totalInc = isRange ? inc(low) + " ~ " + inc(high) : inc(low);
+  var supply = isRange ? won(Math.round(low)) + " ~ " + won(Math.round(high)) : won(Math.round(low));
+  var vat = isRange ? won(Math.round(low*.1)) + " ~ " + won(Math.round(high*.1)) : won(Math.round(low*.1));
+  html += '<tr class="qtotal"><td>합계 청구액 (부가세 포함)</td><td class="r">' + totalInc + '</td></tr></table>';
+  html += '<div style="font-size:11px;color:#5a6472;text-align:right;">공급가액 ' + supply + ' + 부가가치세 ' + vat + '</div>';
+
+  // 지급 일정 (10억 이하 50/50, 초과 30/30/40) — 부가세 포함 기준
+  function payAmt(pct){
+    var l = low*1.1*pct, h = high*1.1*pct;
+    return isRange ? won(Math.round(l)) + " ~ " + won(Math.round(h)) : won(Math.round(l));
+  }
+  html += '<table style="margin-top:14px;"><tr><th>지급 일정 (부가세 포함)</th><th>지급 시기</th><th style="text-align:right;">금액</th></tr>';
+  if (a <= 10 && !over100){
+    html += '<tr><td>착수금 50%</td><td>위임계약 체결 시</td><td class="r">' + payAmt(0.5) + '</td></tr>' +
+            '<tr><td>잔금 50%</td><td>상속세 신고서 접수(접수증 교부) 시</td><td class="r">' + payAmt(0.5) + '</td></tr>';
+  } else {
+    html += '<tr><td>착수금 30%</td><td>위임계약 체결 시</td><td class="r">' + payAmt(0.3) + '</td></tr>' +
+            '<tr><td>중간금 30%</td><td>재산 확정 · 세액 초안 보고 시</td><td class="r">' + payAmt(0.3) + '</td></tr>' +
+            '<tr><td>잔금 40%</td><td>상속세 신고서 접수(접수증 교부) 시</td><td class="r">' + payAmt(0.4) + '</td></tr>';
+  }
+  html += '</table>';
+  html += '<div style="margin-top:8px;padding:9px 12px;background:#eaf4ed;border-radius:6px;font-size:11.5px;"><b>입금 계좌</b> &nbsp; 하나은행 <b>010-3489-4567</b> (평생계좌) · 예금주: 원제우세무사</div>';
+
+  // 수행 업무 범위 (2단)
+  var scope = ["상속재산 조회·목록 작성 (안심상속·금감원 조회 안내)","피상속인 10년 계좌 거래내역 분석","재산 평가 — 평가방법 전략 검토 (기준시가·유사매매·감정평가)","사전증여재산 합산 · 증여세액공제 반영","공과금·장례비·채무 증빙 검토·차감","상속공제 검토 — 배우자공제 분할 설계 · 1·2차 상속 시뮬레이션","상속재산분할협의 세무 자문 (분할안별 세액 비교)","신고서·부속서류 작성 및 홈택스 전자신고","납부 설계 — 분납·연부연납·물납 신청","조사 대비 소명자료 작성·첨부","신고 후 서면 소명자료 대응 (2회 이내)","상속 취득세 신고 검토 · 등기 법무사 연계"];
+  html += '<div class="qblock" style="margin-top:14px;"><b style="font-size:12px;color:#2E7D4F;">본 견적에 포함되는 수행 업무</b>' +
+    '<table style="margin-top:6px;"><tr>' +
+    '<td style="width:50%;border-bottom:none;padding:2px 8px 2px 0;vertical-align:top;font-size:10.5px;line-height:1.8;">' + scope.slice(0,6).map(function(s){return "· "+s;}).join("<br>") + '</td>' +
+    '<td style="width:50%;border-bottom:none;padding:2px 0;vertical-align:top;font-size:10.5px;line-height:1.8;">' + scope.slice(6).map(function(s){return "· "+s;}).join("<br>") + '</td>' +
+    '</tr></table></div>';
+
+  var audit = document.getElementById("audit").value;
+  if (audit !== "none"){
+    var start0 = (audit==="regional") ? 500 : 300;
+    var start = document.getElementById("othersFiling").checked ? start0*1.3 : start0;
+    html += '<table style="margin-top:16px;"><tr><th>세무조사 대응 (실지조사 통지 시 별도 계약)</th><th style="text-align:right;">보수 (부가세 포함)</th></tr>' +
+      '<tr><td>' + (audit==="regional" ? "지방국세청 조사국" : "관할 세무서") + ' 조사 착수보수' + (document.getElementById("othersFiling").checked ? " (타 사무소 신고 건)" : "") + '</td><td class="r">' + inc(start) + (audit==="regional"?"~":"") + '</td></tr>' +
+      '<tr><td>성공보수</td><td class="r">쟁점 감액분의 15' + (audit==="regional"?"~20":"") + '% (부가세 별도 가산)</td></tr></table>';
+  }
+
+  html += '<div class="qnote">· 피상속인의 사망연도분 종합소득세·부가가치세 확정신고는 별도 보수입니다.<br>' +
+    '· 실지조사(세무조사) 통지 시 조사 대응은 별도 계약으로 진행되며, 성공보수 기준은 당초 고지 예상액 대비 감액분입니다.<br>' +
+    '· 감정평가 수수료, 등기 비용(법무사), 소송 비용(변호사)은 본 견적에 포함되지 않으며 각 전문가에게 직접 지급됩니다.<br>' +
+    '· 재산 내역 확인 과정에서 견적 항목이 달라질 수 있으며, 확정 보수는 위임계약서 기준입니다.</div>';
+
+  // 2페이지 — 보수 기준표 (참고 첨부)
+  html += '<div class="qpage2">' +
+    '<div class="qhead" style="border-bottom:2.5px solid var(--navy);padding-bottom:10px;margin-bottom:14px;">' +
+    '<div><h1 style="font-size:18px;">상속세 신고 보수 기준표 (참고 첨부)</h1>' +
+    '<div style="margin-top:4px;font-size:11px;color:#5a6472;">원제우세무사사무소 · 2026. 9. 채택 · 모든 금액은 부가세 별도 기준이며, 부가세 포함 금액을 함께 표기합니다</div></div></div>';
+
+  html += '<table><tr><th>총상속재산가액</th><th>보수 산식</th><th style="text-align:right;">부가세 별도</th><th style="text-align:right;">부가세 포함</th></tr>' +
+    '<tr><td>3억원 이하</td><td>정액</td><td class="r">150만원</td><td class="r">165만원</td></tr>' +
+    '<tr><td>5억원 이하</td><td>정액</td><td class="r">200만원</td><td class="r">220만원</td></tr>' +
+    '<tr><td>10억원 이하</td><td>정액</td><td class="r">250만원</td><td class="r">275만원</td></tr>' +
+    '<tr><td>10억 초과 ~ 20억 미만</td><td>250만원 + 10억 초과분 × 0.3%</td><td class="r">20억 → 550만원</td><td class="r">605만원</td></tr>' +
+    '<tr><td>20억 ~ 30억 미만</td><td>550만원 + 20억 초과분 × 0.2%</td><td class="r">30억 → 750만원</td><td class="r">825만원</td></tr>' +
+    '<tr><td>30억 ~ 50억 미만</td><td>750만원 + 30억 초과분 × 0.15%</td><td class="r">50억 → 1,050만원</td><td class="r">1,155만원</td></tr>' +
+    '<tr><td>50억 ~ 100억 미만</td><td>1,050만원 + 50억 초과분 × 0.1%</td><td class="r">100억 → 1,550만원</td><td class="r">1,705만원</td></tr>' +
+    '<tr><td>100억원 이상</td><td>1,550만원 + 초과분 별도 협의</td><td class="r">협의</td><td class="r">협의</td></tr>' +
+    '</table>';
+
+  html += '<div class="qblock" style="margin-top:14px;"><b style="font-size:12px;color:#2E7D4F;">가산 항목</b>' +
+    '<table style="margin-top:6px;"><tr><th>항목</th><th style="text-align:right;">가산 기준</th></tr>' +
+    '<tr><td>비상장주식 평가</td><td class="r">종목당 +150만원</td></tr>' +
+    '<tr><td>부동산 다건</td><td class="r">5건 초과분 건당 +20만원</td></tr>' +
+    '<tr><td>사전증여재산 정리</td><td class="r">건당 +30만원</td></tr>' +
+    '<tr><td>해외재산 · 비거주자 판정</td><td class="r">기본보수+정액가산 합계의 +30~50%</td></tr>' +
+    '<tr><td>신고기한 2개월 미만 착수</td><td class="r">+30%</td></tr>' +
+    '<tr><td>가업·영농상속공제 적용</td><td class="r">+300만원 (요건 검토·사후관리 설계 포함)</td></tr>' +
+    '</table></div>';
+
+  html += '<div class="qblock" style="margin-top:14px;"><b style="font-size:12px;color:#2E7D4F;">세무조사 대응 보수 (별도 계약)</b>' +
+    '<table style="margin-top:6px;"><tr><th>구분</th><th style="text-align:right;">착수보수</th><th style="text-align:right;">성공보수</th></tr>' +
+    '<tr><td>관할 세무서 조사</td><td class="r">300만원</td><td class="r">쟁점 감액분의 15%</td></tr>' +
+    '<tr><td>지방국세청 조사국 조사</td><td class="r">500만원~ (협의)</td><td class="r">감액분의 15~20%</td></tr>' +
+    '<tr><td>타 사무소 신고 건의 조사 수임</td><td class="r">위 기준 +30%</td><td class="r">동일</td></tr>' +
+    '<tr><td>불복 (이의신청·심사·심판청구)</td><td class="r">300~500만원</td><td class="r">인용세액의 20%</td></tr>' +
+    '</table></div>';
+
+  html += '<div class="qnote" style="margin-top:14px;">· 세액이 나오지 않는 공제 이하 신고에도 위 기본 보수표를 동일하게 적용합니다 — 보수는 세액이 아니라 업무량 기준이며, 무세액 신고는 감정평가 취득가액 기록(향후 양도소득세 절세)과 무신고 결정 리스크 차단의 실익이 있습니다.<br>' +
+    '· 성공보수의 기준은 \'당초 고지 예상액 대비 감액분\'으로 위임계약서에 정의합니다.<br>' +
+    '· 재산 내역 확인 과정에서 견적 항목이 달라질 수 있으며, 확정 보수는 위임계약서를 기준으로 합니다.</div>';
+
+  html += '</div>'; // /qpage2
+
+  document.getElementById("quoteSheet").innerHTML = html;
+  document.body.className = "pq";
+  window.print();
+}
+function comma(n){ return Math.round(n).toLocaleString(); }
+function suggest(){
+  var a = parseFloat(document.getElementById("asset").value) || 0;
+  var f = baseFee(a);
+  if (f !== null && f > 0){ document.getElementById("fee").value = Math.round(f); }
+  feeInfo();
+}
+function feeInfo(){
+  var f = parseFloat(document.getElementById("fee").value) || 0;
+  var a = parseFloat(document.getElementById("asset").value) || 0;
+  var plan = (a > 10 || baseFee(a) === null) ? "착수 30% · 중간 30% · 잔금 40%" : "착수 50% · 잔금 50%";
+  document.getElementById("feeHint").textContent = f > 0
+    ? "부가세 포함 " + comma(f*1.1) + "만원 · 지급 구조: " + plan
+    : "";
+}
+function addHeir(v){
+  v = v || {};
+  var d = document.createElement("div");
+  d.className = "heir-row";
+  d.innerHTML = '<input type="text" placeholder="성명" value="'+(v.n||"")+'">' +
+    '<input type="text" placeholder="예: 배우자" value="'+(v.r||"")+'">' +
+    '<input type="text" placeholder="1970-01-01" value="'+(v.b||"")+'">' +
+    '<input type="text" placeholder="010-" value="'+(v.t||"")+'">' +
+    '<button onclick="this.parentNode.remove()">×</button>';
+  document.getElementById("heirs").appendChild(d);
+}
+addHeir(); addHeir(); addHeir();
+
+function fmtDate(v){
+  if (!v) return "        년      월      일";
+  var p = v.split("-");
+  return p[0] + "년 " + parseInt(p[1]) + "월 " + parseInt(p[2]) + "일";
+}
+function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function makeContract(){
+  var rep = esc(document.getElementById("rep").value) || esc(document.getElementById("cname").value).replace(/\s*님$/,"") || "_______________";
+  var repTel = esc(document.getElementById("repTel").value) || "________________";
+  var dec = esc(document.getElementById("dec").value) || "_______________";
+  var ddate = fmtDate(document.getElementById("ddate").value);
+  var cdate = fmtDate(document.getElementById("cdate").value);
+  var a = parseFloat(document.getElementById("asset").value) || 0;
+  var fee = parseFloat(document.getElementById("fee").value) || 0;
+  var feeStr = fee > 0 ? comma(fee) + "만원" : "______________원";
+  var feeVat = fee > 0 ? comma(fee*1.1) + "만원" : "______________원";
+  var small = (a > 0 && a <= 10 && baseFee(a) !== null);
+  var chk1 = small ? "☑" : "☐", chk2 = small ? "☐" : "☑";
+  function pay(pct){ return fee > 0 ? " — 금 " + comma(fee*1.1*pct) + "만원(부가세 포함)" : ""; }
+
+  var payRows = small
+    ? '<tr><td>착수금 50%</td><td>위임계약 체결 시</td><td>' + (fee>0? comma(fee*1.1*0.5)+"만원":"") + '</td></tr>' +
+      '<tr><td>잔금 50%</td><td>상속세 신고서 접수(접수증 교부) 시</td><td>' + (fee>0? comma(fee*1.1*0.5)+"만원":"") + '</td></tr>'
+    : '<tr><td>착수금 30%</td><td>위임계약 체결 시</td><td>' + (fee>0? comma(fee*1.1*0.3)+"만원":"") + '</td></tr>' +
+      '<tr><td>중간금 30%</td><td>재산 확정·세액 초안 보고 시</td><td>' + (fee>0? comma(fee*1.1*0.3)+"만원":"") + '</td></tr>' +
+      '<tr><td>잔금 40%</td><td>상속세 신고서 접수(접수증 교부) 시</td><td>' + (fee>0? comma(fee*1.1*0.4)+"만원":"") + '</td></tr>';
+
+  var scope = ["상속재산 조회·파악 — 안심상속 원스톱서비스·금융감독원 상속인 금융거래조회 안내 및 결과 정리, 상속재산 목록 작성",
+    "피상속인의 10년간 금융거래내역 분석 (사전증여·추정상속재산 사전 검토)",
+    "상속재산 평가 — 부동산 평가방법 검토(기준시가·유사매매사례가액·감정평가 활용 전략), 상장주식·금융재산 평가",
+    "사전증여재산 합산 검토 및 기납부 증여세액공제 반영",
+    "공과금·장례비용·채무의 증빙 검토 및 차감 정리",
+    "상속공제 검토·적용 — 배우자상속공제 분할 설계, 1·2차 상속 합산 시뮬레이션 포함",
+    "상속재산분할협의에 대한 세무 자문 (협의서 양식 제공, 분할안별 세액 비교)",
+    "상속세 과세표준신고서 및 부속서류 작성, 홈택스 전자신고·접수",
+    "납부 설계 — 분납·연부연납·물납 검토 및 신청서 작성",
+    "세무조사 대비 소명자료 작성 및 신고서 첨부",
+    "신고 후 과세관청의 서면 소명자료 요구에 대한 대응 (2회 이내)",
+    "상속 취득세 신고 검토 및 등기 담당 법무사와의 업무 연계"];
+  var excl = ["피상속인의 사망연도분 종합소득세·부가가치세 확정신고 (별도 보수로 수행)",
+    "실지조사(세무조사) 대응 — 제7조에 따라 별도 계약으로 전환",
+    "신고 이후의 경정청구 및 수정신고",
+    "감정평가 수수료(감정평가사), 상속등기 비용(법무사), 소송 비용(변호사) — 위임인이 각 전문가에게 직접 지급하며, 을은 전문가 연결·일정 조율을 지원한다"];
+
+  var heirs = [];
+  document.querySelectorAll("#heirs .heir-row").forEach(function(r){
+    var ins = r.querySelectorAll("input");
+    heirs.push([esc(ins[0].value), esc(ins[1].value), esc(ins[2].value), esc(ins[3].value)]);
+  });
+  while (heirs.length < 6) heirs.push(["","","",""]);
+  var heirRows = heirs.map(function(h){
+    return '<tr style="height:9mm;"><td>'+h[0]+'</td><td style="text-align:center;">'+h[1]+'</td><td style="text-align:center;">'+h[2]+'</td><td>'+h[3]+'</td><td></td></tr>';
+  }).join("");
+
+  var html =
+  '<h1>상속세 신고 업무 위임계약서</h1><div class="csub">원제우세무사사무소</div>' +
+  '<table class="pt">' +
+  '<tr><td>위임인 (갑)</td><td>대표상속인: <b>' + rep + '</b> &nbsp;(연락처: ' + repTel + ')</td></tr>' +
+  '<tr><td></td><td>피상속인: <b>' + dec + '</b> &nbsp;(상속개시일: ' + ddate + ')</td></tr>' +
+  '<tr><td></td><td>상속인 전원: 별지 상속인 명단 기재와 같음</td></tr>' +
+  '<tr><td>수임인 (을)</td><td>원제우세무사사무소 세무사 원제우 (등록번호 W35563)<br>경기도 부천시 소향로 135, 3층 · 전화 032-321-4521 · taxmancall@gmail.com</td></tr>' +
+  '</table>' +
+  '<p>위임인(이하 "갑")과 수임인(이하 "을")은 피상속인의 상속세 신고 업무에 관하여 다음과 같이 위임계약을 체결한다.</p>' +
+
+  '<h3>제1조 (위임 업무의 범위)</h3>' +
+  '<p>① 을이 수행하는 업무는 다음 각 호와 같다.</p><ol>' +
+  scope.map(function(s){return "<li>"+s+"</li>";}).join("") + '</ol>' +
+  '<p>② 다음 각 호의 업무는 본 계약의 범위에 포함되지 아니한다.</p><ol>' +
+  excl.map(function(s){return "<li>"+s+"</li>";}).join("") + '</ol>' +
+
+  '<h3>제2조 (보수)</h3>' +
+  '<p>① 본 계약의 보수는 금 <b>' + feeStr + '</b>(부가가치세 별도, 부가가치세 포함 금 <b>' + feeVat + '</b>)으로 한다. 보수의 산정 기준은 별지 「상속세 신고·조사 대응 보수 기준표」에 따른다.</p>' +
+  '<p>② 재산 내역 확인 과정에서 별지 기준표의 가산 항목(비상장주식 평가, 해외재산, 가업·영농상속공제 적용 등)에 해당하는 사정이 새로 확인되는 경우, 갑과 을은 협의하여 보수를 조정하고 서면(문자·전자우편 포함)으로 확인한다.</p>' +
+
+  '<h3>제3조 (보수의 지급)</h3>' +
+  '<p>① 갑은 보수를 다음과 같이 지급한다.</p>' +
+  '<p style="margin-left:14px;">' + chk1 + ' 총상속재산가액 10억원 이하: 착수금 50% + 잔금 50%<br>' + chk2 + ' 총상속재산가액 10억원 초과: 착수금 30% + 중간금 30% + 잔금 40%</p>' +
+  '<table><tr><th>구분</th><th>지급 시기</th><th>금액 (부가세 포함)</th></tr>' + payRows + '</table>' +
+  '<p>② 잔금의 지급 시기는 상속세 과세표준신고서의 접수(접수증 교부)가 완료된 때로 한다.</p>' +
+  '<div class="acct">③ 입금 계좌: 하나은행 010-3489-4567 (평생계좌, 예금주: 원제우세무사)</div>' +
+  '<p>④ 보수는 상속인 전원이 연대하여 지급할 의무를 진다. 갑은 상속인 전원을 대표하여 본 계약을 체결하며, 별지 상속인 명단의 서명으로 이를 확인한다.</p>' +
+
+  '<h3>제4조 (갑의 의무 — 자료 제공과 진실성)</h3>' +
+  '<p>① 갑은 상속재산·채무·사전증여 등 신고에 필요한 자료와 정보를 지체 없이, 사실대로 제공하여야 한다.</p>' +
+  '<p>② 갑이 제공하지 않았거나 사실과 다르게 제공한 자료·정보로 인하여 발생하는 가산세, 추징세액 및 그 밖의 불이익은 갑의 부담으로 한다.</p>' +
+
+  '<h3>제5조 (을의 의무)</h3>' +
+  '<p>① 을은 세무사법 및 관계 법령을 준수하여 선량한 관리자의 주의로 위임 업무를 수행한다.</p>' +
+  '<p>② 을은 업무 수행 중 알게 된 갑과 피상속인의 비밀을 정당한 사유 없이 누설하지 아니한다.</p>' +
+
+  '<h3>제6조 (계약의 해지와 정산)</h3>' +
+  '<p>① 갑 또는 을은 상대방에 대한 서면 통지로 본 계약을 해지할 수 있다.</p>' +
+  '<p>② 계약이 중도에 해지되는 경우 착수금은 반환하지 아니한다. 다만 해지 시점까지 을이 수행한 업무의 가치가 기수령 보수를 초과하는 경우, 을은 그 초과분의 정산을 청구할 수 있다.</p>' +
+
+  '<h3>제7조 (세무조사 대응)</h3>' +
+  '<p>① 신고 후 과세관청의 서면 소명자료 요구에 대한 대응(2회 이내)은 본 계약의 보수에 포함된다.</p>' +
+  '<p>② 실지조사(세무조사) 통지가 있는 경우 그 대응 업무는 별지 기준표에 따라 별도 계약으로 진행하며, 성공보수의 기준은 당초 고지 예상액 대비 감액분으로 한다.</p>' +
+
+  '<h3>제8조 (관할)</h3>' +
+  '<p>본 계약에 관한 분쟁은 을의 사무소 소재지를 관할하는 법원을 제1심 관할법원으로 한다.</p>' +
+
+  '<p style="margin-top:12px;">본 계약의 성립을 증명하기 위하여 계약서 2부를 작성하여 갑과 을이 각각 서명 또는 날인한 후 1부씩 보관한다.</p>' +
+  '<p class="signrow">계약일: <b>' + cdate + '</b></p>' +
+  '<p class="signrow">위임인 (갑) 대표상속인: <b>' + rep + '</b> &nbsp;&nbsp;&nbsp;&nbsp;(서명 또는 인)</p>' +
+  '<p class="signrow">수임인 (을) 원제우세무사사무소 세무사 원 제 우 &nbsp;&nbsp;&nbsp;&nbsp;(서명 또는 인)</p>' +
+  '<p style="font-size:9.5px;color:#5a6472;margin-top:8px;">붙임: 1. 상속세 신고·조사 대응 보수 기준표 1부 &nbsp; 2. 상속인 명단 및 연대지급 확인서 1부</p>' +
+
+  '<div class="pgbrk"></div>' +
+  '<h1 style="font-size:17px;">[별지] 상속인 명단 및 연대지급 확인서</h1>' +
+  '<p style="margin-top:8px;">아래 상속인들은 본 위임계약의 내용을 확인하였으며, 제3조 제4항에 따라 보수를 연대하여 지급할 것을 확인합니다.</p>' +
+  '<table style="margin-top:8px;"><tr><th style="width:24%;">성명</th><th style="width:16%;">피상속인과의 관계</th><th style="width:18%;">생년월일</th><th style="width:24%;">연락처</th><th>서명 또는 인</th></tr>' +
+  heirRows + '</table>' +
+  '<p style="margin-top:10px;">피상속인: <b>' + dec + '</b> · 상속개시일: ' + ddate + '</p>' +
+  '<p style="font-size:10px;color:#5a6472;">작성일: ' + cdate + '</p>';
+
+  document.getElementById("sheet").innerHTML = html;
+  document.body.className = "pc";
+  window.print();
+}
+
+function pullFee(){
+  var a = parseFloat(document.getElementById("asset").value) || 0;
+  var add = 0;
+  var st = parseInt(document.getElementById("stock").value)||0; add += st*150;
+  var rt = parseInt(document.getElementById("realty").value)||0; if (rt>5) add += (rt-5)*20;
+  var gf = parseInt(document.getElementById("gift").value)||0; add += gf*30;
+  if (document.getElementById("biz").checked) add += 300;
+  var f = baseFee(a);
+  var b = (f === null) ? 1550 : f;
+  var pct = 0;
+  if (document.getElementById("foreign").checked) pct += 0.30;
+  if (document.getElementById("urgent").checked) pct += 0.30;
+  document.getElementById("fee").value = Math.round((b + add) * (1 + pct));
+  feeInfo();
+}
+window.addEventListener("afterprint", function(){ document.body.className = ""; });
+</script>
+<div id="quoteSheet"></div>
+<div id="sheet"></div>
+</body>
+</html>
